@@ -7,7 +7,7 @@
 #include <gtkmm/scrollable.h>
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
-#include "mytextbuffer.h"
+#include "mytextview.h"
 
 class MyTextArea : public Gtk::DrawingArea {
 public:
@@ -30,42 +30,29 @@ protected:
     void on_realize() override;
 
     bool on_scroll_event(GdkEventScroll *scroll_event) override;
+    static void on_commit_callback(GtkIMContext* context, gchar* str, gpointer user_data);
+    void on_commit(gchar        *str);
 
 private:
     void draw_line(const Cairo::RefPtr<Cairo::Context>& cr, unsigned long line_num, double x, double y);
 
     void initialize();
 
-    enum caret_pos_t {
-        KNOWN,
-        END
-    };
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Glib::RefPtr<Gtk::Adjustment> m_adjustment;
 
-    bool move_caret_up();
-    bool move_caret_down();
-    bool move_caret_left();
-    bool move_caret_right();
+    MyTextView m_textView;
+
 
     const char* _font_name = "DejaVu Sans Mono";
     const int _font_size = 10;
     const Pango::Weight _font_weight = Pango::WEIGHT_NORMAL;
 
-    MyTextBuffer _buffer;
-    std::vector<std::vector<char>> _screen_lines;
-    std::vector<unsigned long> _screen_line_sizes;
-    unsigned long _current_line_count = 0;
-    unsigned long _top_line = 0;
-    unsigned long _top_line_new = 0;
-
-
     Pango::FontDescription _font_description;
     int _char_height = 0;
     int _char_width = 0;
-    unsigned long _caret_line = 0;
-    unsigned long _caret_column = 0;
-    caret_pos_t _caret_pos = KNOWN;
+
+    GtkIMContext* m_imContext;
 };
 
 

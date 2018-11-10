@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by mats on 2018-11-06.
 //
@@ -5,6 +7,16 @@
 #include "mytextarea.h"
 #include <pangomm/fontmap.h>
 #include <iostream>
+#include <functional>
+
+
+void foo_commit_callback(GtkIMContext */*context*/,
+                                 gchar        *str,
+                                 gpointer      user_data) {
+  auto length = strlen(str);
+  auto textView = static_cast<MyTextView*>(user_data);
+  textView->insert(str, length);
+}
 
 
 MyTextArea::MyTextArea(BaseObjectType* cobject,
@@ -23,16 +35,15 @@ MyTextArea::MyTextArea()
 MyTextArea::~MyTextArea() = default;
 
 void MyTextArea::set_file(const std::string& filename) {
-  _buffer.load(filename);
+  m_textView.set_file(filename);
   if (m_adjustment) {
-    m_adjustment->set_upper(_buffer.line_count());
+    m_adjustment->set_upper(m_textView.size());
     m_adjustment->set_value(0);
-
   }
 }
 
 void MyTextArea::set_adjustment(Glib::RefPtr<Gtk::Adjustment> adjustment) {
-  m_adjustment = adjustment;
+  m_adjustment = std::move(adjustment);
   m_adjustment->configure(0, 0, 0, 1, 1, 1);
   m_adjustment->signal_value_changed().connect(sigc::mem_fun(*this, &MyTextArea::on_adjustment_value_changed));
 }
@@ -53,6 +64,7 @@ void MyTextArea::initialize() {
   set_can_focus(true);
 }
 
+
 bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
   Gtk::Allocation allocation = get_allocation();
   const int width = allocation.get_width();
@@ -60,31 +72,10 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
   double line_count = height / (double)_char_height;
 
-  if (((unsigned long)line_count) > _current_line_count || _top_line != _top_line_new){
-    _screen_lines.clear();
-    _screen_line_sizes.clear();
-    _top_line = _top_line_new;
-    _current_line_count = (unsigned long)line_count;
-    bool fraction = (line_count - _current_line_count) > 0.1;
-    if (_current_line_count + _top_line >= _buffer.line_count()) {
-      _current_line_count = _buffer.line_count() - _top_line;
-      fraction = false;
-    }
-
-    auto range = _current_line_count;
-    if (fraction)
-      range++;
-
-    for (unsigned long i = 0; i < range; ++i) {
-      auto line_no = _top_line + i;
-      auto line = _buffer.get_line(line_no);
-      auto length = strlen(line);
-      _screen_lines.push_back(std::vector<char>(line, line + length + 1));
-      _screen_line_sizes.push_back(length);
-    }
-
-    m_adjustment->set_page_size(_current_line_count);
-    m_adjustment->set_page_increment(_current_line_count);
+  if (m_textView.update_display_size(line_count)) {
+    m_adjustment->set_page_size(line_count);
+    m_adjustment->set_page_increment(line_count);
+    m_adjustment->set_value(m_textView.get_display_top_line_position());
   }
 
   // Draw a white rectangle
@@ -95,7 +86,7 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
   // and some black text
   cr->set_source_rgb(0.0, 0.0, 0.0);
   double y = 0;
-  for (unsigned long i = 0; i < _current_line_count; ++i) {
+  for (unsigned long i = 0; i < line_count; ++i) {
     draw_line(cr, i, 0, y);
     y += _char_height;
   }
@@ -105,18 +96,20 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 void MyTextArea::draw_line(const Cairo::RefPtr<Cairo::Context> &cr, unsigned long line_num, double x, double y) {
 
-  auto line = &_screen_lines[line_num][0];
-  auto layout = create_pango_layout(line);
+  auto layout = create_pango_layout(m_textView.get_line(line_num));
   layout->set_font_description(_font_description);
   int text_width;
   int text_height;
 
-  if ((line_num + _top_line) == _caret_line) {
-    if (_caret_pos == END) {
-      _caret_column = _screen_line_sizes[_caret_line - _top_line];
-    }
-    _caret_pos = KNOWN;
-    auto caret_column = std::min(_caret_column, _screen_line_sizes[_caret_line - _top_line]);
+  auto attrs = Pango::AttrList();
+  auto attr = Pango::Attribute::create_attr_background(0, 65535, 65535);
+  attr.set_start_index(2);
+  attr.set_end_index(4);
+  attrs.insert(attr);
+  layout->set_attributes(attrs);
+
+  auto caret_column = m_textView.get_caret_pos(line_num);
+  if (caret_column >= 0) {
     get_style_context()->render_insertion_cursor(cr, x, y, layout, caret_column, Pango::Direction::DIRECTION_LTR);
   }
 
@@ -127,127 +120,35 @@ void MyTextArea::draw_line(const Cairo::RefPtr<Cairo::Context> &cr, unsigned lon
   layout->show_in_cairo_context(cr);
 }
 
+
 bool MyTextArea::on_key_press_event(GdkEventKey *event) {
   if (event->keyval == GDK_KEY_Right) {
-    move_caret_right();
+    m_textView.move_caret_right();
     queue_draw();
     return true;
   }
   else if (event->keyval == GDK_KEY_Left) {
-    move_caret_left();
+    m_textView.move_caret_left();
     queue_draw();
     return true;
   }
   if (event->keyval == GDK_KEY_Up) {
-    move_caret_up();
+    m_textView.move_caret_up();
     queue_draw();
     return true;
   }
   else if (event->keyval == GDK_KEY_Down) {
-    move_caret_down();
+    m_textView.move_caret_down();
     queue_draw();
     return true;
   }
 
-  return Widget::on_key_press_event(event);
+  return gtk_im_context_filter_keypress(m_imContext, event);
+
+//  return Widget::on_key_press_event(event);
 }
 
-bool MyTextArea::move_caret_left() {
-  if (_caret_column > 0) {
-    _caret_column--;
-  } else {
-    if (move_caret_up())
-      _caret_pos = END;
-  }
-  return true;
-}
 
-bool MyTextArea::move_caret_right() {
-  if (_caret_column < _screen_line_sizes.at(_caret_line - _top_line)) {
-    _caret_column++;
-  } else {
-    if (move_caret_down())
-      _caret_column = 0;
-  }
-  return true;
-}
-
-bool MyTextArea::move_caret_up() {
-  std::cout << "caret_line: " << _caret_line
-            << ", top_line: " << _top_line
-            << ", adjustment: " << m_adjustment->get_value()
-            << ", current_line: " << _current_line_count;
-
-  // The caret is above the current viewing window
-  if (_caret_line < _top_line) {
-    std::cout << ", above";
-    m_adjustment->set_value(_caret_line-2);
-  }
-    // The caret is below the current viewing window
-  else if (_caret_line > _top_line + _current_line_count) {
-    auto top_line = _caret_line - _current_line_count + 1;
-    std::cout << ", below, new top line: " << top_line;
-    m_adjustment->set_value(top_line);
-  }
-    // The caret is within the current viewing window
-  else {
-    std::cout << ", within";
-    if (_caret_line == _top_line) {
-      std::cout << ", moving";
-      if (_top_line > 0)
-        m_adjustment->set_value(_top_line - 1);
-      else
-        m_adjustment->set_value(0);
-    }
-  }
-
-
-  if (_caret_line == 0) {
-    std::cout << ", at beginning" << std::endl;
-    _caret_column = 0;
-    return false;
-  }
-  _caret_line--;
-  std::cout << "." << std::endl;
-  return true;
-}
-
-bool MyTextArea::move_caret_down() {
-  std::cout << "caret_line: " << _caret_line
-            << ", top_line: " << _top_line
-            << ", adjustment: " << m_adjustment->get_value()
-            << ", current_line: " << _current_line_count;
-
-
-  // The caret is above the current viewing window
-  if (_caret_line < _top_line) {
-    std::cout << ", above";
-    m_adjustment->set_value(_caret_line);
-  }
-  // The caret is below the current viewing window
-  else if (_caret_line > _top_line + _current_line_count) {
-    auto top_line = _caret_line - _current_line_count + 3;
-    std::cout << ", below, new top line: " << top_line;
-    m_adjustment->set_value(top_line);
-  }
-  // The caret is within the current viewing window
-  else {
-    std::cout << ", within";
-    if (_caret_line == _top_line + _current_line_count - 1) {
-      std::cout << ", moving";
-      m_adjustment->set_value(_top_line + 1);
-    }
-  }
-  if (_caret_line == _buffer.line_count() - 1) {
-    std::cout << ", at end" << std::endl;
-    _caret_line = _buffer.line_count() - 1;
-    _caret_pos = END;
-    return false;
-  }
-  _caret_line++;
-  std::cout << "." << std::endl;
-  return true;
-}
 
 
 bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
@@ -256,8 +157,7 @@ bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
           (button_event->button == 1)) {
     auto column = button_event->x / _char_width;
     auto line = button_event->y / _char_height;
-    _caret_line = line + _top_line;
-    _caret_column = (column + 0.5);
+    m_textView.set_caret_relative(line, lround(column));
     queue_draw();
 
     return true;
@@ -265,29 +165,31 @@ bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
   return Widget::on_button_press_event(button_event);
 }
 
+
+
+
 void MyTextArea::on_realize() {
+  using namespace std::placeholders;
   Widget::on_realize();
   Gdk::CursorType cursorType = Gdk::CursorType::XTERM;
   auto cursor = Gdk::Cursor::create(cursorType);
   auto window = get_window();
   window->set_cursor(cursor);
+
+  m_imContext = gtk_im_multicontext_new();
+
+  gtk_im_context_set_client_window(m_imContext, Glib::unwrap(window));
+  gtk_im_context_focus_in(m_imContext);
+  g_signal_connect(m_imContext, "commit",
+                   G_CALLBACK(&MyTextArea::on_commit_callback), this);
 }
 
 void MyTextArea::on_adjustment_value_changed() {
-  std::cout << "adjustment: " << m_adjustment->get_value()
-  << ", line_count: " << _current_line_count
-  << ", buffer.size(): " << _buffer.line_count()
-  <<std::endl;
-  _top_line_new = m_adjustment->get_value();
+  m_textView.update_top_line(m_adjustment->get_value());
   queue_draw();
 }
 
 bool MyTextArea::on_scroll_event(GdkEventScroll *scroll_event) {
-  std::cout << "Scroll event, direction: " << scroll_event->direction
-          << ", delta_x: " << scroll_event->delta_x
-          << ", delta_y: " << scroll_event->delta_y
-  << std::endl;
-
   switch (scroll_event->direction) {
     case GdkScrollDirection::GDK_SCROLL_DOWN:
       m_adjustment->set_value(m_adjustment->get_value() + 3*m_adjustment->get_step_increment());
@@ -300,4 +202,15 @@ bool MyTextArea::on_scroll_event(GdkEventScroll *scroll_event) {
   }
 
   return Widget::on_scroll_event(scroll_event);
+}
+
+void MyTextArea::on_commit_callback(GtkIMContext *, gchar *str, gpointer user_data) {
+  auto textArea = static_cast<MyTextArea*>(user_data);
+  textArea->on_commit(str);
+}
+
+void MyTextArea::on_commit(gchar *str) {
+  auto length = strlen(str);
+  m_textView.insert(str, length);
+  queue_draw();
 }
