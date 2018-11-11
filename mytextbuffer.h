@@ -14,6 +14,7 @@ public:
     void load(const std::string& filename);
 
     void insert(unsigned long line_num, unsigned long column, const char* data, unsigned long size);
+    void remove(unsigned long line_num, unsigned long column, bool back);
 
     const char* get_line(unsigned long line_num);
     unsigned long line_count() const {

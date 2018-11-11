@@ -53,6 +53,7 @@ bool MyTextView::move_caret_up() {
     return false;
   }
   _caret_line--;
+  _caret_pos = caret_pos_t::UNKNOWN;
   return true;
 }
 
@@ -78,12 +79,14 @@ bool MyTextView::move_caret_down() {
     return false;
   }
   _caret_line++;
+  _caret_pos = caret_pos_t::UNKNOWN;
   return true;
 }
 
 void MyTextView::set_caret_relative(unsigned long line, unsigned long column) {
   _caret_line = m_display_top_line_position + line;
   _caret_column = column;
+  _caret_pos = caret_pos_t::UNKNOWN;
 }
 
 void MyTextView::set_file(const std::string &filename) {
@@ -140,9 +143,12 @@ long MyTextView::get_caret_pos(unsigned long display_line) {
     if (_caret_pos == caret_pos_t::END) {
       _caret_column = _screen_line_sizes[_caret_line - m_display_top_line_position];
     }
+    else if (_caret_pos == caret_pos_t::UNKNOWN) {
+      _caret_column = std::min(_caret_column, _screen_line_sizes[_caret_line - m_display_top_line_position]);
+
+    }
     _caret_pos = caret_pos_t::KNOWN;
-    auto caret_column = std::min(_caret_column, _screen_line_sizes[_caret_line - m_display_top_line_position]);
-    return caret_column;
+    return _caret_column;
   }
   else {
     return -1;
@@ -158,4 +164,31 @@ void MyTextView::insert(const char *data, unsigned long size) {
   _buffer.insert(_caret_line, _caret_column, data, size);
   _caret_column++;
   m_force_update = true;
+}
+
+void MyTextView::remove(bool back) {
+  auto line = _caret_line;
+  auto col = _caret_column;
+
+  if (col == 0) {
+
+  }
+
+  if (back) {
+    move_caret_left();
+    if (col == 0 && line > 0) {
+      auto prev_data = _buffer.get_line(line - 1);
+      auto prev_size = strlen(prev_data);
+      _caret_column = prev_size;
+      _caret_pos = caret_pos_t::KNOWN;
+      std::cout << "Fixed caret" << std::endl;
+    }
+  }
+
+  _buffer.remove(line, col, back);
+  m_force_update = true;
+}
+
+size_t MyTextView::display_count() const {
+  return m_current_display_line_count;
 }

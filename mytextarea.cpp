@@ -73,8 +73,9 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
   double line_count = height / (double)_char_height;
 
   if (m_textView.update_display_size(line_count)) {
-    m_adjustment->set_page_size(line_count);
-    m_adjustment->set_page_increment(line_count);
+    m_adjustment->set_page_size(m_textView.display_count());
+    m_adjustment->set_page_increment(m_textView.display_count());
+    m_adjustment->set_upper(m_textView.size());
     m_adjustment->set_value(m_textView.get_display_top_line_position());
   }
 
@@ -86,7 +87,7 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
   // and some black text
   cr->set_source_rgb(0.0, 0.0, 0.0);
   double y = 0;
-  for (unsigned long i = 0; i < line_count; ++i) {
+  for (unsigned long i = 0; i < m_textView.display_count(); ++i) {
     draw_line(cr, i, 0, y);
     y += _char_height;
   }
@@ -142,10 +143,18 @@ bool MyTextArea::on_key_press_event(GdkEventKey *event) {
     queue_draw();
     return true;
   }
+  else if (event->keyval == GDK_KEY_Delete) {
+    m_textView.remove(false);
+    queue_draw();
+    return true;
+  }
+  else if (event->keyval == GDK_KEY_BackSpace) {
+    m_textView.remove(true);
+    queue_draw();
+    return true;
+  }
 
   return gtk_im_context_filter_keypress(m_imContext, event);
-
-//  return Widget::on_key_press_event(event);
 }
 
 
@@ -157,7 +166,7 @@ bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
           (button_event->button == 1)) {
     auto column = button_event->x / _char_width;
     auto line = button_event->y / _char_height;
-    m_textView.set_caret_relative(line, lround(column));
+    m_textView.set_caret_relative(line, (unsigned long)lround(column));
     queue_draw();
 
     return true;
@@ -182,6 +191,8 @@ void MyTextArea::on_realize() {
   gtk_im_context_focus_in(m_imContext);
   g_signal_connect(m_imContext, "commit",
                    G_CALLBACK(&MyTextArea::on_commit_callback), this);
+
+
 }
 
 void MyTextArea::on_adjustment_value_changed() {
