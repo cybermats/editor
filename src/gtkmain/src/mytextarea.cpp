@@ -44,7 +44,9 @@ void MyTextArea::initialize() {
   _char_width = metrics.get_approximate_char_width() / PANGO_SCALE;
 
   add_events(Gdk::BUTTON_PRESS_MASK);
+  add_events(Gdk::BUTTON_RELEASE_MASK);
   add_events(Gdk::SCROLL_MASK);
+  add_events(Gdk::BUTTON1_MOTION_MASK);
   set_can_focus(true);
 }
 
@@ -132,12 +134,9 @@ bool MyTextArea::on_key_press_event(GdkEventKey *event) {
 }
 
 
-
-
 bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
-  std::cout << "mouse button event" << std::endl;
   if ((button_event->type == GDK_BUTTON_PRESS) &&
-          (button_event->button == 1)) {
+      (button_event->button == 1)) {
     auto line = (unsigned long)(button_event->y / _char_height);
     auto column = (unsigned long)lround(button_event->x / _char_width);
     m_textView.set_caret_relative(line, column);
@@ -149,8 +148,33 @@ bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
   return Widget::on_button_press_event(button_event);
 }
 
+bool MyTextArea::on_button_release_event(GdkEventButton *button_event) {
+  if ((button_event->type == GDK_BUTTON_RELEASE) &&
+      (button_event->button == 1)) {
+    auto line = (unsigned long)(button_event->y / _char_height);
+    auto column = (unsigned long)lround(button_event->x /_char_width);
+    m_textView.set_caret_relative(line, column);
+    m_textView.set_selection_end_relative(line, column);
+    queue_draw();
 
+    return true;
+  }
+  return Widget::on_button_release_event(button_event);
+}
 
+bool MyTextArea::on_motion_notify_event(GdkEventMotion *motion_event) {
+  if (motion_event->state & GDK_BUTTON1_MASK) {
+    auto line = (unsigned long)(motion_event->y / _char_height);
+    auto column = (unsigned long)lround(motion_event->x / _char_width);
+    m_textView.set_caret_relative(line, column);
+    m_textView.set_selection_end_relative(line, column);
+    queue_draw();
+
+    return true;
+  }
+
+  return Widget::on_motion_notify_event(motion_event);
+}
 
 void MyTextArea::on_realize() {
   using namespace std::placeholders;
