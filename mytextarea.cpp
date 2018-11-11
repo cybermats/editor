@@ -138,9 +138,10 @@ bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
   std::cout << "mouse button event" << std::endl;
   if ((button_event->type == GDK_BUTTON_PRESS) &&
           (button_event->button == 1)) {
-    auto column = button_event->x / _char_width;
-    auto line = button_event->y / _char_height;
-    m_textView.set_caret_relative(line, (unsigned long)lround(column));
+    auto line = (unsigned long)(button_event->y / _char_height);
+    auto column = (unsigned long)lround(button_event->x / _char_width);
+    m_textView.set_caret_relative(line, column);
+    m_textView.set_selection_start_relative(line, column);
     queue_draw();
 
     return true;

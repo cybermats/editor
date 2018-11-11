@@ -27,6 +27,10 @@ public:
 
     void set_caret_relative(unsigned long line, unsigned long column);
 
+    void set_selection_start_relative(unsigned long line, unsigned long column);
+
+    void set_selection_end_relative(unsigned long line, unsigned long column);
+
     void set_file(const std::string &filename);
 
     void update_top_line(unsigned long line);
@@ -48,10 +52,16 @@ public:
     void remove(bool back);
 
 private:
-    enum class caret_pos_t {
+    enum class PositionState {
         KNOWN,
         UNKNOWN,
         END
+    };
+
+    struct Position {
+        unsigned long line = 0;
+        unsigned long column = 0;
+        PositionState state = PositionState::KNOWN;
     };
 
     MyTextBuffer _buffer;
@@ -59,9 +69,10 @@ private:
     std::vector<std::vector<char>> _screen_lines;
     std::vector<unsigned long> _screen_line_sizes;
 
-    unsigned long _caret_line = 0;
-    unsigned long _caret_column = 0;
-    caret_pos_t _caret_pos = caret_pos_t::KNOWN;
+    Position _caret;
+
+    Position m_selectionStart;
+    Position m_selectionEnd;
 
     unsigned long m_current_display_line_count = 0;
     unsigned long m_display_top_line_position = 0;
