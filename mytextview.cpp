@@ -4,6 +4,11 @@
 
 #include "mytextview.h"
 #include <cstring>
+#include <iostream>
+
+void MyTextView::set_formatter(const std::string& name, Formatter *formatter) {
+  m_formatters[name] = formatter;
+}
 
 
 bool MyTextView::move_caret_left() {

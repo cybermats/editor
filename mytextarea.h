@@ -8,13 +8,13 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "mytextview.h"
+#include "formatter/pangostylizer.h"
+#include "formatter/regexformatter.h"
 
 class MyTextArea : public Gtk::DrawingArea {
 public:
     MyTextArea(BaseObjectType* cobject,
     const Glib::RefPtr<Gtk::Builder>& refBuilder);
-
-    MyTextArea();
 
     ~MyTextArea() override;
 
@@ -42,13 +42,10 @@ private:
     Glib::RefPtr<Gtk::Adjustment> m_adjustment;
 
     MyTextView m_textView;
+    RegexFormatter m_formatter;
+    PangoStylizer m_stylizer;
 
 
-    const char* _font_name = "DejaVu Sans Mono";
-    const int _font_size = 10;
-    const Pango::Weight _font_weight = Pango::WEIGHT_NORMAL;
-
-    Pango::FontDescription _font_description;
     int _char_height = 0;
     int _char_width = 0;
 

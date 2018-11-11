@@ -5,29 +5,16 @@
 //
 
 #include "mytextarea.h"
-#include <pangomm/fontmap.h>
 #include <iostream>
 #include <functional>
-
-
-void foo_commit_callback(GtkIMContext */*context*/,
-                                 gchar        *str,
-                                 gpointer      user_data) {
-  auto length = strlen(str);
-  auto textView = static_cast<MyTextView*>(user_data);
-  textView->insert(str, length);
-}
 
 
 MyTextArea::MyTextArea(BaseObjectType* cobject,
                          const Glib::RefPtr<Gtk::Builder>& refBuilder)
         : Gtk::DrawingArea(cobject)
         , m_refBuilder(refBuilder)
-{
-  initialize();
-}
-
-MyTextArea::MyTextArea()
+        , m_formatter()
+        , m_stylizer(&m_formatter)
 {
   initialize();
 }
@@ -49,11 +36,8 @@ void MyTextArea::set_adjustment(Glib::RefPtr<Gtk::Adjustment> adjustment) {
 }
 
 void MyTextArea::initialize() {
-  _font_description.set_family(_font_name);
-  _font_description.set_weight(_font_weight);
-  _font_description.set_size(_font_size * PANGO_SCALE);
   auto context = Gtk::Widget::get_pango_context();
-  auto metrics = context->get_metrics(_font_description);
+  auto metrics = context->get_metrics(m_stylizer.get_font_description());
   auto ascent = metrics.get_ascent();
   auto descent = metrics.get_descent();
   _char_height = (ascent + descent) / PANGO_SCALE;
@@ -96,26 +80,16 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 }
 
 void MyTextArea::draw_line(const Cairo::RefPtr<Cairo::Context> &cr, unsigned long line_num, double x, double y) {
+  auto line = m_textView.get_line(line_num);
+  auto layout = create_pango_layout(line);
 
-  auto layout = create_pango_layout(m_textView.get_line(line_num));
-  layout->set_font_description(_font_description);
-  int text_width;
-  int text_height;
-
-  auto attrs = Pango::AttrList();
-  auto attr = Pango::Attribute::create_attr_background(0, 65535, 65535);
-  attr.set_start_index(2);
-  attr.set_end_index(4);
-  attrs.insert(attr);
-  layout->set_attributes(attrs);
+  m_stylizer.format(layout, line);
 
   auto caret_column = m_textView.get_caret_pos(line_num);
   if (caret_column >= 0) {
     get_style_context()->render_insertion_cursor(cr, x, y, layout, caret_column, Pango::Direction::DIRECTION_LTR);
   }
 
-  //get the text dimensions (it updates the variables -- by reference)
-  layout->get_pixel_size(text_width, text_height);
   // Position the text in the middle
   cr->move_to(x, y);
   layout->show_in_cairo_context(cr);

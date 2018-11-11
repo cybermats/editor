@@ -45,6 +45,26 @@ add_executable(hello_world_gtk
         myappwindow.cpp
         myappwindow.h
         ${RESOURCE_FILE}
-        mytextview.cpp mytextview.h)
+        mytextview.cpp
+        mytextview.h
+        formatter/formatter.cpp
+        formatter/formatter.h
+        formatter/wordformatter.cpp
+        formatter/wordformatter.h
+        formatter/style.cpp
+        formatter/style.h
+        formatter/stylizer.cpp
+        formatter/stylizer.h
+        formatter/pangostylizer.cpp
+        formatter/pangostylizer.h
+        formatter/regexformatter.cpp
+        formatter/regexformatter.h
+        formatter/stylefactory.cpp
+        formatter/stylefactory.h
+        formatter/stylemap.cpp
+        formatter/stylemap.h
+        formatter/stylelist.cpp
+        formatter/stylelist.h
+        )
 
 target_link_libraries(hello_world_gtk ${GTKMM_LIBRARIES}  )

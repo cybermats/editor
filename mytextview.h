@@ -7,10 +7,16 @@
 #include <vector>
 #include <map>
 #include "mytextbuffer.h"
+#include "formatter/formatter.h"
+#include "formatter/wordformatter.h"
+
+// TODO(mats): Handle the state consistency when rows have been deleted. It freaks out when scrolling to the bottom.
 
 class MyTextView {
 
 public:
+
+    void set_formatter(const std::string& name, Formatter* formatter);
 
     bool move_caret_up();
 
@@ -50,6 +56,7 @@ private:
     };
 
     MyTextBuffer _buffer;
+    std::map<std::string, Formatter*> m_formatters;
     std::vector<std::vector<char>> _screen_lines;
     std::vector<unsigned long> _screen_line_sizes;
 
