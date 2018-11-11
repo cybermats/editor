@@ -4,24 +4,19 @@
 
 #pragma once
 #include <vector>
+#include <memory>
 
 class Style;
 
 class StyleList {
 public:
-    StyleList() = default;
-    ~StyleList() {
-      //TODO(mats): Figure out how the life cycle of Styles should be.
-      /*      for(auto s: m_styles)
-        delete s;*/
-    }
 
     void add(Style* style) {
-      m_styles.push_back(style);
+      m_styles.push_back(std::unique_ptr<Style>(style));
     }
 
     const Style* operator[](unsigned long idx) const {
-      return m_styles[idx];
+      return m_styles[idx].get();
     }
 
     unsigned long size() const {
@@ -29,5 +24,5 @@ public:
     }
 
 private:
-    std::vector<Style*> m_styles;
+    std::vector<std::unique_ptr<Style>> m_styles;
 };
