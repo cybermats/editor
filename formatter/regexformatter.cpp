@@ -64,7 +64,7 @@ RegexFormatter::RegexFormatter() : Formatter() {
           "using uuid virtual void volatile whcar_t while");
 
 
-  m_regexs.emplace_back("comments", std::regex("/\\/\\/.*$", std::regex_constants::ECMAScript));
+  m_regexs.emplace_back("comments", std::regex("\\/\\/.*$", std::regex_constants::ECMAScript));
   m_regexs.emplace_back("string", std::regex(R"("([^\\"\n]|\\.)*")", std::regex_constants::ECMAScript));
   m_regexs.emplace_back("string", std::regex(R"('([^\\'\n]|\\.)*')", std::regex_constants::ECMAScript));
   m_regexs.emplace_back("keyword", keywords);
