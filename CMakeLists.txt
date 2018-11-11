@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(hello_world_gtk)
 
+message("${PROJECT_SOURCE_DIR}")
+
 list(APPEND CMAKE_MODULE_PATH
-     ~/code/GCR_CMake/macros)
+     "${PROJECT_SOURCE_DIR}/thirdparty/GCR_CMake/macros")
 
 include(GlibCompileResourcesSupport)
 
