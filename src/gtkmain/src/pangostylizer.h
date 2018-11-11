@@ -5,7 +5,7 @@
 #pragma once
 
 
-#include "stylizer.h"
+#include <style/stylizer.h>
 #include <pangomm.h>
 
 class PangoStylizer : public Stylizer {
@@ -35,5 +35,3 @@ private:
 
 
 };
-
-

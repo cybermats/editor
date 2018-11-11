@@ -3,7 +3,7 @@
 //
 
 #include "pangostylizer.h"
-#include "style.h"
+#include <style/style.h>
 #include <gtkmm.h>
 
 void PangoStylizer::visit(const ForegroundStyle& style) {
@@ -57,4 +57,3 @@ PangoStylizer::PangoStylizer(Formatter *formatter) : Stylizer(formatter) {
 const Pango::FontDescription &PangoStylizer::get_font_description() const {
   return _font_description;
 }
-

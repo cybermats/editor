@@ -38,7 +38,7 @@ void MyAppWindow::open_file_view(const Glib::RefPtr<Gio::File> &file) {
 }
 
 MyAppWindow *MyAppWindow::create() {
-  auto refBuilder = Gtk::Builder::create_from_resource("/org/mats/exampleapp/mywindow.ui");
+  auto refBuilder = Gtk::Builder::create_from_resource("/org/mats/editor/assets/mywindow.ui");
 
   MyAppWindow* appWindow = nullptr;
   refBuilder->get_widget_derived("applicationwindow1", appWindow);

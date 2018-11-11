@@ -1,0 +1,39 @@
+list(APPEND CMAKE_MODULE_PATH
+     "${PROJECT_SOURCE_DIR}/thirdparty/GCR_CMake/macros")
+
+include(GlibCompileResourcesSupport)
+
+FIND_PACKAGE(PkgConfig REQUIRED)
+pkg_check_modules(GTKMM gtkmm-3.0)
+
+link_directories(${GTKMM_LIBRARY_DIRS})
+
+include_directories(${GTKMM_INCLUDE_DIRS})
+
+set(RESOURCE_LIST
+        STRIPBLANKS assets/mywindow.ui
+    )
+
+compile_gresources(RESOURCE_FILE
+                   XML_OUT
+                   TYPE EMBED_C
+                   RESOURCES ${RESOURCE_LIST}
+        PREFIX "/org/mats/exampleapp"
+        TARGET resources.c
+        )
+add_custom_target(resource ALL DEPENDS ${RESOURCE_FILE})
+
+add_executable(hello_world_gtk
+        src/main.cpp
+        src/mytextarea.cpp
+        src/mytextarea.h
+        src/myapplication.cpp
+        src/myapplication.h
+        src/myappwindow.cpp
+        src/myappwindow.h
+        ${RESOURCE_FILE}
+        src/pangostylizer.cpp
+        )
+
+
+target_link_libraries(hello_world_gtk ${GTKMM_LIBRARIES} lib )

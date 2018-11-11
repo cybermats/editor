@@ -8,8 +8,8 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "mytextview.h"
-#include "formatter/pangostylizer.h"
-#include "formatter/regexformatter.h"
+#include "pangostylizer.h"
+#include <formatter/regexformatter.h>
 
 class MyTextArea : public Gtk::DrawingArea {
 public:
@@ -51,5 +51,3 @@ private:
 
     GtkIMContext* m_imContext;
 };
-
-
