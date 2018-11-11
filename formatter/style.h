@@ -20,18 +20,9 @@ public:
       return m_start_idx;
     }
 
-    void set_start_idx(unsigned long m_start_idx) {
-      Style::m_start_idx = m_start_idx;
-    }
-
     unsigned long get_end_idx() const {
       return m_end_idx;
     }
-
-    void set_end_idx(unsigned long m_end_idx) {
-      Style::m_end_idx = m_end_idx;
-    }
-
 
 private:
     friend void Stylizer::process(const StyleList& styles);
@@ -63,24 +54,12 @@ public:
       return m_red;
     }
 
-    void set_red(unsigned char red) {
-      m_red = red;
-    }
-
     unsigned char get_green() const {
       return m_green;
     }
 
-    void set_green(unsigned char green) {
-      m_green = green;
-    }
-
     unsigned char get_blue() const {
       return m_blue;
-    }
-
-    void set_blue(unsigned char blue) {
-      m_blue = blue;
     }
 
     void accept(Stylizer* stylizer) const override;
@@ -112,24 +91,12 @@ public:
       return m_red;
     }
 
-    void set_red(unsigned char red) {
-      m_red = red;
-    }
-
     unsigned char get_green() const {
       return m_green;
     }
 
-    void set_green(unsigned char green) {
-      m_green = green;
-    }
-
     unsigned char get_blue() const {
       return m_blue;
-    }
-
-    void set_blue(unsigned char blue) {
-      m_blue = blue;
     }
 
     void accept(Stylizer* stylizer) const override;

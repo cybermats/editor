@@ -39,13 +39,11 @@ public:
       return *this;
     }
 
-    StyleList get(unsigned long start, unsigned long end)
+    void populate(StyleList& styleList, unsigned long start, unsigned long end)
     {
-      StyleList output;
       for(const auto &f: m_styles) {
-        output.add(f(start, end));
+        styleList.add(f(start, end));
       }
-      return output;
     }
 private:
     std::vector<std::function<Style*(unsigned long, unsigned long)>> m_styles;

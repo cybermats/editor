@@ -8,7 +8,6 @@
 #include <map>
 #include "mytextbuffer.h"
 #include "formatter/formatter.h"
-#include "formatter/wordformatter.h"
 
 // TODO(mats): Handle the state consistency when rows have been deleted. It freaks out when scrolling to the bottom.
 

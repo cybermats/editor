@@ -16,9 +16,9 @@ public:
         delete s;*/
     }
 
-    void add(Style* style);
-
-    void add(const StyleList& styleList);
+    void add(Style* style) {
+      m_styles.push_back(style);
+    }
 
     const Style* operator[](unsigned long idx) const {
       return m_styles[idx];

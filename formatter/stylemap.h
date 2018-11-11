@@ -14,8 +14,9 @@ public:
       m_map[name] = std::move(styleFactory);
     }
 
-    StyleList get(const std::string &name, unsigned long start, unsigned long end) {
-      return m_map[name].get(start, end);
+    void populate(StyleList& styleList, const std::string &name, unsigned long start, unsigned long end) {
+      m_map[name].populate(styleList, start, end);
+
     }
 
 private:

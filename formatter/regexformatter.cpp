@@ -19,7 +19,7 @@ StyleList RegexFormatter::format_line(const char *str) {
       std::cmatch match = *it;
       auto start = match.position();
       auto finish = start + match.length();
-      output.add(m_styleMap.get(name, start, finish));
+      m_styleMap.populate(output, name, start, finish);
     }
   }
   return output;

@@ -49,8 +49,6 @@ add_executable(hello_world_gtk
         mytextview.h
         formatter/formatter.cpp
         formatter/formatter.h
-        formatter/wordformatter.cpp
-        formatter/wordformatter.h
         formatter/style.cpp
         formatter/style.h
         formatter/stylizer.cpp
@@ -59,11 +57,8 @@ add_executable(hello_world_gtk
         formatter/pangostylizer.h
         formatter/regexformatter.cpp
         formatter/regexformatter.h
-        formatter/stylefactory.cpp
         formatter/stylefactory.h
-        formatter/stylemap.cpp
         formatter/stylemap.h
-        formatter/stylelist.cpp
         formatter/stylelist.h
         )
 
