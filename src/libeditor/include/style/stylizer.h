@@ -6,35 +6,35 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 #include "stylelist.h"
 
 class Formatter;
-class ForegroundStyle;
-class BackgroundStyle;
-class BoldStyle;
+class ForegroundStyleType;
+class BackgroundStyleType;
+class BoldStyleType;
 
 
 
 class Stylizer {
 
 public:
-    explicit Stylizer(Formatter* formatter);
-    virtual ~Stylizer();
+  virtual ~Stylizer() = default;
 
-    virtual void visit(const ForegroundStyle& style) = 0;
+  void add_formatter(Formatter *formatter);
 
-    virtual void visit(const BackgroundStyle& style) = 0;
+    virtual void visit(const ForegroundStyleType* style) = 0;
 
-    virtual void visit(const BoldStyle& style) = 0;
+    virtual void visit(const BackgroundStyleType* style) = 0;
+
+    virtual void visit(const BoldStyleType* style) = 0;
 
     void process(const StyleList& styles);
 
 protected:
     virtual void on_begin() = 0;
-    virtual StyleList process_line(const char*);
+  virtual StyleList process_line(unsigned long line_num, const char* str);
 
 private:
-    Formatter* m_formatter;
+  std::vector<std::unique_ptr<Formatter>> m_formatters;
 };
-
-

@@ -5,11 +5,12 @@
 #pragma once
 
 
-#include "style/style.h"
+class StyleList;
 
 class Formatter {
 public:
-  virtual StyleList format_line(const char* str) = 0;
+  virtual void format_line(
+      StyleList& styleList, unsigned long line, const char* str) = 0;
     virtual ~Formatter() = default;
 
 protected:

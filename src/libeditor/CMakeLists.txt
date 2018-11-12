@@ -5,8 +5,10 @@ add_library(libeditor STATIC
   src/mytextbuffer.cpp
   src/mytextview.cpp
   src/regexformatter.cpp
-  src/style.cpp
   src/stylizer.cpp
+  src/style.cpp
+  src/styletype.cpp
+  src/selectionformatter.cpp
   )
 
 

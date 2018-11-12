@@ -8,6 +8,7 @@
 #include <map>
 #include "mytextbuffer.h"
 #include "formatter/formatter.h"
+#include "position.h"
 
 // TODO(mats): Handle the state consistency when rows have been deleted. It freaks out when scrolling to the bottom.
 
@@ -29,7 +30,11 @@ public:
 
     void set_selection_start_relative(unsigned long line, unsigned long column);
 
-    void set_selection_end_relative(unsigned long line, unsigned long column);
+  Position get_selection_begin() const;
+
+  Position get_selection_end() const;
+
+    void set_selection_finish_relative(unsigned long line, unsigned long column);
 
     void set_file(const std::string &filename);
 
@@ -45,6 +50,8 @@ public:
 
     long get_caret_pos(unsigned long display_line);
 
+  unsigned long get_actual_line(unsigned long display_line);
+
     unsigned long get_display_top_line_position() const;
 
     void insert(const char *data, unsigned long size);
@@ -52,18 +59,6 @@ public:
     void remove(bool back);
 
 private:
-    enum class PositionState {
-        KNOWN,
-        UNKNOWN,
-        END
-    };
-
-    struct Position {
-        unsigned long line = 0;
-        unsigned long column = 0;
-        PositionState state = PositionState::KNOWN;
-    };
-
     MyTextBuffer _buffer;
     std::map<std::string, Formatter*> m_formatters;
     std::vector<std::vector<char>> _screen_lines;
@@ -72,7 +67,7 @@ private:
     Position _caret;
 
     Position m_selectionStart;
-    Position m_selectionEnd;
+    Position m_selectionFinish;
 
     unsigned long m_current_display_line_count = 0;
     unsigned long m_display_top_line_position = 0;
@@ -80,5 +75,3 @@ private:
     bool m_force_update = false;
 
 };
-
-

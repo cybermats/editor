@@ -5,10 +5,8 @@
 #include "formatter/regexformatter.h"
 #include "style/stylefactory.h"
 
-StyleList RegexFormatter::format_line(const char *str) {
+void RegexFormatter::format_line(StyleList &styleList, unsigned long, const char *str) {
   auto len = strlen(str);
-  StyleList output;
-
   for (auto regex_item: m_regexs) {
     auto regex = regex_item.second;
     auto name = regex_item.first;
@@ -19,10 +17,9 @@ StyleList RegexFormatter::format_line(const char *str) {
       std::cmatch match = *it;
       auto start = match.position();
       auto finish = start + match.length();
-      m_styleMap.populate(output, name, start, finish);
+      m_styleMap.populate(styleList, name, start, finish);
     }
   }
-  return output;
 }
 
 RegexFormatter::RegexFormatter() : Formatter() {

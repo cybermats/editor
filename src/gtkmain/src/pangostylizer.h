@@ -7,20 +7,22 @@
 
 #include <style/stylizer.h>
 #include <pangomm.h>
+#include <formatter/formatter.h>
 
 class PangoStylizer : public Stylizer {
 public:
-    explicit PangoStylizer(Formatter* formatter);
+    explicit PangoStylizer();
     ~PangoStylizer() override;
 
-    void visit(const ForegroundStyle& style) override;
+    void visit(const ForegroundStyleType* style) override;
 
-    void visit(const BackgroundStyle& style) override;
+    void visit(const BackgroundStyleType* style) override;
 
-    void visit(const BoldStyle& style) override;
+    void visit(const BoldStyleType* style) override;
 
     const Pango::FontDescription& get_font_description() const;
-    void format(Glib::RefPtr<Pango::Layout> layout, const char *line);
+    void format(Glib::RefPtr<Pango::Layout> layout,
+                unsigned long line_num, const char *line);
 
     protected:
     void on_begin() override;
@@ -32,6 +34,4 @@ private:
     const Pango::Weight _font_weight = Pango::WEIGHT_NORMAL;
 
     Pango::FontDescription _font_description;
-
-
 };

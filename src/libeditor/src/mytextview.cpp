@@ -6,6 +6,21 @@
 #include <cstring>
 #include <iostream>
 
+Position MyTextView::get_selection_begin() const {
+  if (m_selectionStart < m_selectionFinish)
+    return m_selectionStart;
+  else
+    return m_selectionFinish;
+}
+
+Position MyTextView::get_selection_end() const {
+  if (m_selectionStart < m_selectionFinish)
+    return m_selectionFinish;
+  else
+    return m_selectionStart;
+}
+
+
 void MyTextView::set_formatter(const std::string& name, Formatter *formatter) {
   m_formatters[name] = formatter;
 }
@@ -30,6 +45,11 @@ bool MyTextView::move_caret_right() {
   }
   return true;
 }
+
+unsigned long MyTextView::get_actual_line(unsigned long display_line) {
+  return m_display_top_line_position + display_line;
+}
+
 
 bool MyTextView::move_caret_up() {
   // The caret is above the current viewing window
@@ -198,14 +218,21 @@ size_t MyTextView::display_count() const {
   return m_current_display_line_count;
 }
 
-void MyTextView::set_selection_start_relative(unsigned long line, unsigned long column) {
-  m_selectionStart.line = m_display_top_line_position + line;
+void MyTextView::set_selection_start_relative(
+    unsigned long line, unsigned long column) {
+  auto begin = m_display_top_line_position + line;
+  m_selectionStart.line = begin;
   m_selectionStart.column = column;
   m_selectionStart.state = PositionState::UNKNOWN;
+
+  m_selectionFinish = m_selectionStart;
 }
 
-void MyTextView::set_selection_end_relative(unsigned long line, unsigned long column) {
-  m_selectionEnd.line = m_display_top_line_position + line;
-  m_selectionEnd.column = column;
-  m_selectionEnd.state = PositionState::UNKNOWN;
+void MyTextView::set_selection_finish_relative(
+    unsigned long line, unsigned long column) {
+  auto begin = m_display_top_line_position + line;
+
+  m_selectionFinish.line = begin;
+  m_selectionFinish.column = column;
+  m_selectionFinish.state = PositionState::UNKNOWN;
 }

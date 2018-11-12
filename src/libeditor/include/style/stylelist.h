@@ -6,17 +6,18 @@
 #include <vector>
 #include <memory>
 
-class Style;
+#include "style/style.h"
+
 
 class StyleList {
 public:
 
-    void add(Style* style) {
-      m_styles.push_back(std::unique_ptr<Style>(style));
+    void add(const Style& style) {
+      m_styles.push_back(style);
     }
 
-    const Style* operator[](unsigned long idx) const {
-      return m_styles[idx].get();
+    const Style& operator[](unsigned long idx) const {
+      return m_styles[idx];
     }
 
     unsigned long size() const {
@@ -24,5 +25,5 @@ public:
     }
 
 private:
-    std::vector<std::unique_ptr<Style>> m_styles;
+    std::vector<Style> m_styles;
 };

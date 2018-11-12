@@ -7,14 +7,16 @@
 #include "mytextarea.h"
 #include <iostream>
 #include <functional>
+#include <formatter/regexformatter.h>
+#include <formatter/selectionformatter.h>
 
 
 MyTextArea::MyTextArea(BaseObjectType* cobject,
                          const Glib::RefPtr<Gtk::Builder>& refBuilder)
         : Gtk::DrawingArea(cobject)
         , m_refBuilder(refBuilder)
-        , m_formatter()
-        , m_stylizer(&m_formatter)
+        , m_formatters()
+        , m_stylizer()
 {
   initialize();
 }
@@ -48,6 +50,11 @@ void MyTextArea::initialize() {
   add_events(Gdk::SCROLL_MASK);
   add_events(Gdk::BUTTON1_MOTION_MASK);
   set_can_focus(true);
+
+
+  m_stylizer.add_formatter(new RegexFormatter());
+  m_stylizer.add_formatter(new SelectionFormatter(&m_textView));
+
 }
 
 
@@ -81,13 +88,17 @@ bool MyTextArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
   return Widget::on_draw(cr);
 }
 
-void MyTextArea::draw_line(const Cairo::RefPtr<Cairo::Context> &cr, unsigned long line_num, double x, double y) {
-  auto line = m_textView.get_line(line_num);
+void MyTextArea::draw_line(
+    const Cairo::RefPtr<Cairo::Context> &cr,
+    unsigned long display_line, double x, double y) {
+  auto line = m_textView.get_line(display_line);
   auto layout = create_pango_layout(line);
 
-  m_stylizer.format(layout, line);
+  auto actual_line = m_textView.get_actual_line(display_line);
 
-  auto caret_column = m_textView.get_caret_pos(line_num);
+  m_stylizer.format(layout, actual_line, line);
+
+  auto caret_column = m_textView.get_caret_pos(display_line);
   if (caret_column >= 0) {
     get_style_context()->render_insertion_cursor(cr, x, y, layout, caret_column, Pango::Direction::DIRECTION_LTR);
   }
@@ -154,7 +165,7 @@ bool MyTextArea::on_button_release_event(GdkEventButton *button_event) {
     auto line = (unsigned long)(button_event->y / _char_height);
     auto column = (unsigned long)lround(button_event->x /_char_width);
     m_textView.set_caret_relative(line, column);
-    m_textView.set_selection_end_relative(line, column);
+    m_textView.set_selection_finish_relative(line, column);
     queue_draw();
 
     return true;
@@ -167,7 +178,7 @@ bool MyTextArea::on_motion_notify_event(GdkEventMotion *motion_event) {
     auto line = (unsigned long)(motion_event->y / _char_height);
     auto column = (unsigned long)lround(motion_event->x / _char_width);
     m_textView.set_caret_relative(line, column);
-    m_textView.set_selection_end_relative(line, column);
+    m_textView.set_selection_finish_relative(line, column);
     queue_draw();
 
     return true;

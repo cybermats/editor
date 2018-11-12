@@ -17,7 +17,7 @@ public:
     StyleFactory& addForeground(unsigned char red, unsigned char  green, unsigned char  blue)
     {
       m_styles.emplace_back([red, green, blue](auto start, auto end){
-          return ForegroundStyle::create(red, green, blue, start, end);
+          return Style::createForeground(red, green, blue, start, end);
       });
 
       return *this;
@@ -26,7 +26,7 @@ public:
     StyleFactory& addBackground(unsigned char  red, unsigned char  green, unsigned char  blue)
     {
       m_styles.emplace_back([red, green, blue](auto start, auto end){
-          return BackgroundStyle::create(red, green, blue, start, end);
+          return Style::createBackground(red, green, blue, start, end);
       });
       return *this;
     }
@@ -34,7 +34,7 @@ public:
     StyleFactory& addBold()
     {
       m_styles.emplace_back([](auto start, auto end){
-          return BoldStyle::create(start, end);
+          return Style::createBold(start, end);
       });
       return *this;
     }
@@ -46,8 +46,6 @@ public:
       }
     }
 private:
-    std::vector<std::function<Style*(unsigned long, unsigned long)>> m_styles;
+    std::vector<std::function<Style(unsigned long, unsigned long)>> m_styles;
 
 };
-
-

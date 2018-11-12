@@ -9,7 +9,7 @@
 #include <gtkmm.h>
 #include "mytextview.h"
 #include "pangostylizer.h"
-#include <formatter/regexformatter.h>
+#include <formatter/formatter.h>
 
 class MyTextArea : public Gtk::DrawingArea {
 public:
@@ -45,7 +45,7 @@ private:
     Glib::RefPtr<Gtk::Adjustment> m_adjustment;
 
     MyTextView m_textView;
-    RegexFormatter m_formatter;
+    std::vector<std::unique_ptr<Formatter>> m_formatters;
     PangoStylizer m_stylizer;
 
 

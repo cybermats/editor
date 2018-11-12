@@ -10,9 +10,10 @@
 #include "style/stylelist.h"
 #include <regex>
 
+
 class RegexFormatter : public Formatter {
 public:
-    StyleList format_line(const char *str) override;
+  void format_line(StyleList &styleList, unsigned long line, const char *str) override;
 
     RegexFormatter();
 
