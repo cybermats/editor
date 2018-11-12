@@ -16,15 +16,17 @@ class MyTextView {
 
 public:
 
-    void set_formatter(const std::string& name, Formatter* formatter);
+  bool calculate_display_window();
 
-    bool move_caret_up();
+  void move_caret_forward(const std::string& step_size);
 
-    bool move_caret_down();
+  void move_caret_backward(const std::string& step_size);
 
-    bool move_caret_left();
+  Position get_next_position(
+      Position position, const std::string& step_size);
 
-    bool move_caret_right();
+  Position get_previous_position(
+      Position position, const std::string& step_size);
 
     void set_caret_relative(unsigned long line, unsigned long column);
 
@@ -71,7 +73,6 @@ private:
 
     unsigned long m_current_display_line_count = 0;
     unsigned long m_display_top_line_position = 0;
-    unsigned long m_update_display_top_line_position = 0;
     bool m_force_update = false;
 
 };

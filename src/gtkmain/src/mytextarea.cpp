@@ -110,23 +110,24 @@ void MyTextArea::draw_line(
 
 
 bool MyTextArea::on_key_press_event(GdkEventKey *event) {
-  if (event->keyval == GDK_KEY_Right) {
-    m_textView.move_caret_right();
+  std::cout << "key_press" << std::endl;
+  if (event->keyval == GDK_KEY_Left) {
+    m_textView.move_caret_backward("character");
     queue_draw();
     return true;
   }
-  else if (event->keyval == GDK_KEY_Left) {
-    m_textView.move_caret_left();
+  else if (event->keyval == GDK_KEY_Right) {
+    m_textView.move_caret_forward("character");
     queue_draw();
     return true;
   }
   if (event->keyval == GDK_KEY_Up) {
-    m_textView.move_caret_up();
+    m_textView.move_caret_backward("line");
     queue_draw();
     return true;
   }
   else if (event->keyval == GDK_KEY_Down) {
-    m_textView.move_caret_down();
+    m_textView.move_caret_forward("line");
     queue_draw();
     return true;
   }
@@ -144,6 +145,17 @@ bool MyTextArea::on_key_press_event(GdkEventKey *event) {
   return gtk_im_context_filter_keypress(m_imContext, event);
 }
 
+void MyTextArea::on_commit_callback(GtkIMContext *, gchar *str, gpointer user_data) {
+  auto textArea = static_cast<MyTextArea*>(user_data);
+  textArea->on_commit(str);
+}
+
+void MyTextArea::on_commit(gchar *str) {
+  std::cout << "on_commit" << std::endl;
+  auto length = strlen(str);
+  m_textView.insert(str, length);
+  queue_draw();
+}
 
 bool MyTextArea::on_button_press_event(GdkEventButton *button_event) {
   if ((button_event->type == GDK_BUTTON_PRESS) &&
@@ -223,15 +235,4 @@ bool MyTextArea::on_scroll_event(GdkEventScroll *scroll_event) {
   }
 
   return Widget::on_scroll_event(scroll_event);
-}
-
-void MyTextArea::on_commit_callback(GtkIMContext *, gchar *str, gpointer user_data) {
-  auto textArea = static_cast<MyTextArea*>(user_data);
-  textArea->on_commit(str);
-}
-
-void MyTextArea::on_commit(gchar *str) {
-  auto length = strlen(str);
-  m_textView.insert(str, length);
-  queue_draw();
 }

@@ -20,92 +20,83 @@ Position MyTextView::get_selection_end() const {
     return m_selectionStart;
 }
 
+Position MyTextView::get_next_position(
+    Position position, const std::string& step_size) {
+  auto str = _buffer.get_line(position.line);
 
-void MyTextView::set_formatter(const std::string& name, Formatter *formatter) {
-  m_formatters[name] = formatter;
+  if (step_size == "character") {
+    if (position.column < strlen(str)) {
+      position.column++;
+    }
+    else {
+      position.column = 0;
+      if (position.line < _buffer.line_count() - 1)
+        position.line++;
+    }
+    position.state = PositionState::KNOWN;
+  }
+  else if (step_size == "line") {
+    if (position.line < _buffer.line_count() - 1) {
+      position.line++;
+      position.state = PositionState::UNKNOWN;
+    }
+  }
+  return position;
 }
 
+Position MyTextView::get_previous_position(
+    Position position, const std::string& step_size) {
 
-bool MyTextView::move_caret_left() {
-  if (_caret.column > 0) {
-    _caret.column--;
-  } else {
-    if (move_caret_up())
-      _caret.state = PositionState::END;
+  if (step_size == "character") {
+    if (position.column > 0) {
+      position.column--;
+      position.state = PositionState::KNOWN;
+    }
+    else {
+      if (position.line > 0) {
+        position.line--;
+        position.state = PositionState::END;
+      }
+    }
   }
-  return true;
+  else if (step_size == "line") {
+    if (position.line > 0) {
+      position.line--;
+      position.state = PositionState::UNKNOWN;
+    }
+  }
+
+  return position;
 }
 
-bool MyTextView::move_caret_right() {
-  if (_caret.column < _screen_line_sizes.at(_caret.line - m_display_top_line_position)) {
-    _caret.column++;
-  } else {
-    if (move_caret_down())
-      _caret.column = 0;
-  }
-  return true;
+void MyTextView::move_caret_forward(const std::string& step_size) {
+  _caret = get_next_position(_caret, step_size);
+  calculate_display_window();
+}
+
+void MyTextView::move_caret_backward(const std::string& step_size) {
+  _caret = get_previous_position(_caret, step_size);
+  calculate_display_window();
 }
 
 unsigned long MyTextView::get_actual_line(unsigned long display_line) {
   return m_display_top_line_position + display_line;
 }
 
-
-bool MyTextView::move_caret_up() {
-  // The caret is above the current viewing window
+bool MyTextView::calculate_display_window() {
   if (_caret.line < m_display_top_line_position) {
-    m_update_display_top_line_position = _caret.line - 2;
+    m_display_top_line_position = _caret.line;
+    m_force_update = true;
+    return true;
   }
-    // The caret is below the current viewing window
-  else if (_caret.line > m_display_top_line_position + m_current_display_line_count) {
-    auto top_line = _caret.line - m_current_display_line_count + 1;
-    m_update_display_top_line_position = top_line;
+  else if (_caret.line >= m_display_top_line_position +
+           m_current_display_line_count) {
+    m_display_top_line_position =
+        _caret.line - m_current_display_line_count + 1;
+    m_force_update = true;
+    return true;
   }
-    // The caret is within the current viewing window
-  else {
-    if (_caret.line == m_display_top_line_position) {
-      if (m_display_top_line_position > 0)
-        m_update_display_top_line_position =
-                m_display_top_line_position - 1;
-      else
-        m_update_display_top_line_position = 0;
-    }
-  }
-
-
-  if (_caret.line == 0) {
-    _caret.column = 0;
-    return false;
-  }
-  _caret.line--;
-  _caret.state = PositionState::UNKNOWN;
-  return true;
-}
-
-bool MyTextView::move_caret_down() {
-  // The caret is above the current viewing window
-  if (_caret.line < m_display_top_line_position) {
-    m_update_display_top_line_position = _caret.line;
-  }
-    // The caret is below the current viewing window
-  else if (_caret.line > m_display_top_line_position + m_current_display_line_count) {
-    auto top_line = _caret.line - m_current_display_line_count + 3;
-    m_update_display_top_line_position = top_line;
-  }
-    // The caret is within the current viewing window
-  else {
-    if (_caret.line == m_display_top_line_position + m_current_display_line_count - 1) {
-      m_update_display_top_line_position = m_display_top_line_position + 1;
-    }
-  }
-  if (_caret.line == _buffer.line_count() - 1) {
-    _caret.line = _buffer.line_count() - 1;
-    _caret.state = PositionState::END;
-    return false;
-  }
-  _caret.line++;
-  _caret.state = PositionState::UNKNOWN;
-  return true;
+  return false;
 }
 
 void MyTextView::set_caret_relative(unsigned long line, unsigned long column) {
@@ -123,17 +114,16 @@ size_t MyTextView::size() const {
 }
 
 void MyTextView::update_top_line(unsigned long line) {
-  m_update_display_top_line_position = line;
+  m_display_top_line_position = line;
+  m_force_update = true;
 }
 
 bool MyTextView::update_display_size(double display_line_count) {
   if ((((unsigned long)display_line_count) != m_current_display_line_count)
-  || (m_display_top_line_position != m_update_display_top_line_position)
-  || m_force_update)
+      || m_force_update)
   {
     _screen_lines.clear();
     _screen_line_sizes.clear();
-    m_display_top_line_position = m_update_display_top_line_position;
     m_current_display_line_count = (unsigned long)display_line_count;
     bool fraction = (display_line_count - m_current_display_line_count) > 0.1;
     if (m_current_display_line_count + m_display_top_line_position >= _buffer.line_count()) {
@@ -200,7 +190,7 @@ void MyTextView::remove(bool back) {
   }
 
   if (back) {
-    move_caret_left();
+    move_caret_forward("character");
     if (col == 0 && line > 0) {
       auto prev_data = _buffer.get_line(line - 1);
       auto prev_size = strlen(prev_data);
