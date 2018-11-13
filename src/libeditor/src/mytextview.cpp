@@ -29,9 +29,13 @@ Position MyTextView::get_next_position(
       position.column++;
     }
     else {
-      position.column = 0;
-      if (position.line < _buffer.line_count() - 1)
+      if (position.line < _buffer.line_count() - 1) {
         position.line++;
+        position.column = 0;
+      }
+      else {
+        position.state = PositionState::END;
+      }
     }
     position.state = PositionState::KNOWN;
   }
@@ -176,8 +180,9 @@ unsigned long MyTextView::get_display_top_line_position() const {
 }
 
 void MyTextView::insert(const char *data, unsigned long size) {
+  std::cout << "insert: \"" << data << "\", size: " << size << std::endl;
   _buffer.insert(_caret.line, _caret.column, data, size);
-  _caret.column++;
+  move_caret_forward("character");
   m_force_update = true;
 }
 
@@ -190,7 +195,7 @@ void MyTextView::remove(bool back) {
   }
 
   if (back) {
-    move_caret_forward("character");
+    move_caret_backward("character");
     if (col == 0 && line > 0) {
       auto prev_data = _buffer.get_line(line - 1);
       auto prev_size = strlen(prev_data);
