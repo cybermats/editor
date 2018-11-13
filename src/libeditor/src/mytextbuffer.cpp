@@ -26,7 +26,15 @@ void MyTextBuffer::load(const std::string& filename) {
 
 void MyTextBuffer::insert(unsigned long line_num, unsigned long column, const char *data, unsigned long size) {
   auto& line = _buffer[line_num];
-  line.insert(line.begin() + column, data, data + size);
+  if (*data != '\n') {
+    line.insert(line.begin() + column, data, data + size);
+  }
+  else {
+    _buffer.insert(_buffer.begin() + line_num + 1,
+                   std::vector<char>(line.begin() + column, line.end()));
+    line.erase(line.begin() + column, line.end());
+    line.push_back(0);
+  }
 }
 
 void MyTextBuffer::remove(unsigned long line_num, unsigned long column, bool back) {

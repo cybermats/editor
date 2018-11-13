@@ -141,6 +141,13 @@ bool MyTextArea::on_key_press_event(GdkEventKey *event) {
     queue_draw();
     return true;
   }
+  else if (event->keyval == GDK_KEY_Return) {
+    std::cout << "Return" << std::endl;
+    std::string str = "\n";
+    m_textView.insert(str.c_str(), str.size());
+    queue_draw();
+    return true;
+  }
 
   return gtk_im_context_filter_keypress(m_imContext, event);
 }
